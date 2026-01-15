@@ -1,4 +1,7 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import api from "../api";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+
 import {
   View,
   Text,
@@ -7,82 +10,50 @@ import {
   ScrollView,
   SafeAreaView,
   StatusBar,
+  Switch,
   Image
 } from 'react-native';
 
-const ProfileScreen = ({ navigation }) => {
+const ProfileScreen = ({ navigation  }) => {
   // Données du client (exemple)
-  const clientData = {
-    fullName: 'Marie Dupont',
-    email: 'marie.dupont@email.com',
-    phone: '+33 6 12 34 56 78',
-    address: '123 Avenue des Champs-Élysées, 75008 Paris',
-    memberSince: '15 janvier 2025',
-    totalServices: 12,
-    rating: 4.8,
-    avatar: '👩‍💼'
-  };
+ const [user,setUser] = useState({});
+ const [token,setToken] = useState(null);
+ const [service,setService] = useState(null);
+ const [showAddService, setShowAddService] = useState(false);
 
-  // Services du client
-  const clientServices = [
-    {
-      id: '1',
-      title: 'Service de Nettoyage',
-      category: 'Ménage',
-      price: '50€',
-      date: '08/01/2026',
-      status: 'Terminé',
-      rating: 5
-    },
-    {
-      id: '2',
-      title: 'Jardinage',
-      category: 'Jardinage',
-      price: '45€',
-      date: '05/01/2026',
-      status: 'En cours',
-      rating: null
-    },
-    {
-      id: '3',
-      title: 'Réparation Électrique',
-      category: 'Bricolage',
-      price: '70€',
-      date: '02/01/2026',
-      status: 'Terminé',
-      rating: 4
-    }
-  ];
+ 
 
-  const renderServiceItem = ({ item }) => (
-    <View style={styles.serviceItem}>
-      <View style={styles.serviceHeader}>
-        <Text style={styles.serviceTitle}>{item.title}</Text>
-        <View style={[styles.statusBadge, item.status === 'Terminé' ? styles.completedStatus : styles.ongoingStatus]}>
-          <Text style={styles.statusText}>{item.status}</Text>
-        </View>
-      </View>
-      
-      <View style={styles.serviceDetails}>
-        <Text style={styles.serviceCategory}>{item.category}</Text>
-        <Text style={styles.servicePrice}>{item.price}</Text>
-        <Text style={styles.serviceDate}>{item.date}</Text>
-      </View>
-      
-      {item.rating && (
-        <View style={styles.ratingContainer}>
-          <Text style={styles.ratingLabel}>Note:</Text>
-          <View style={styles.stars}>
-            {[...Array(5)].map((_, index) => (
-              <Text key={index} style={index < item.rating ? styles.star : styles.emptyStar}>
-                ⭐
-              </Text>
-            ))}
-          </View>
-        </View>
-      )}
-    </View>
-  );
+
+  useEffect(() => {
+    const fetchuser= async () => {
+      try {
+        const userparse = JSON.parse(await AsyncStorage.getItem('user'));
+        const tk = await AsyncStorage.getItem("token");
+
+        if (!tk || !userparse) {
+          navigation.replace("Login");
+          return null;
+        }
+         
+        setToken(tk);
+        setUser(userparse)
+        
+
+      } catch (err) {
+        console.error(err);
+      } 
+    };
+
+    fetchuser();
+  }, []);
+
+  useEffect(() => {
+  if (user) {
+    console.log("User mis à jour :", user);
+  }
+}, [user]);
+
+
 
   return (
     <SafeAreaView style={styles.container}>
@@ -98,6 +69,14 @@ const ProfileScreen = ({ navigation }) => {
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Mon Profil</Text>
         <View style={styles.placeholder} />
+         <View style={styles.toggleContainer}>
+          <Text style={styles.toggleText}>Mode fournisseur</Text>
+          <Switch
+            value={showAddService}
+            onValueChange={setShowAddService}
+          />
+        </View>
+
       </View>
 
       <ScrollView style={styles.body} contentContainerStyle={styles.scrollContent}>
@@ -105,15 +84,14 @@ const ProfileScreen = ({ navigation }) => {
         <View style={styles.profileCard}>
           <View style={styles.profileHeader}>
             <View style={styles.avatarContainer}>
-              <Text style={styles.avatar}>{clientData.avatar}</Text>
+              <Text style={styles.avatar}></Text>
             </View>
             <View style={styles.profileInfo}>
-              <Text style={styles.fullName}>{clientData.fullName}</Text>
-              <Text style={styles.memberSince}>Membre depuis {clientData.memberSince}</Text>
+              <Text style={styles.fullName}>{user.nomComplet}</Text>
+              <Text style={styles.memberSince}>Membre depuis {user.dateInscription}</Text>
               <View style={styles.ratingContainer}>
                 <Text style={styles.star}>⭐</Text>
-                <Text style={styles.ratingText}>{clientData.rating}</Text>
-                <Text style={styles.ratingCount}>(12 services)</Text>
+                <Text style={styles.ratingText}>{user.rating}</Text>
               </View>
             </View>
           </View>
@@ -125,17 +103,17 @@ const ProfileScreen = ({ navigation }) => {
           
           <View style={styles.infoItem}>
             <Text style={styles.infoLabel}>📧 Email:</Text>
-            <Text style={styles.infoValue}>{clientData.email}</Text>
+            <Text style={styles.infoValue}>{user.email}</Text>
           </View>
           
           <View style={styles.infoItem}>
             <Text style={styles.infoLabel}>📞 Téléphone:</Text>
-            <Text style={styles.infoValue}>{clientData.phone}</Text>
+            <Text style={styles.infoValue}>{user.telephone}</Text>
           </View>
           
           <View style={styles.infoItem}>
             <Text style={styles.infoLabel}>📍 Adresse:</Text>
-            <Text style={styles.infoValue}>{clientData.address}</Text>
+            <Text style={styles.infoValue}>{user.localisation}</Text>
           </View>
         </View>
 
@@ -143,7 +121,7 @@ const ProfileScreen = ({ navigation }) => {
 
 
         {/* Recent Services */}
-        <View style={styles.servicesSection}>
+        {/* <View style={styles.servicesSection}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Services récents</Text>
             <TouchableOpacity onPress={() => navigation.navigate('MyServices')}>
@@ -180,29 +158,28 @@ const ProfileScreen = ({ navigation }) => {
               )}
             </View>
           ))}
-        </View>
+        </View> */}
 
         {/* Add Service Button */}
-        {/* <TouchableOpacity 
-          style={styles.addServiceButton}
-          onPress={() => navigation.navigate('AddService')}
-        >
-          <Text style={styles.addServiceIcon}>+</Text>
-          <Text style={styles.addServiceText}>Ajouter un service</Text>
-        </TouchableOpacity>
-      </ScrollView> */}
 
+
+        {showAddService && (
         <TouchableOpacity 
           style={styles.addServiceButton}
           onPress={() => navigation.navigate('AddService', {
-            clientId: '4:795d82e6-5f6f-42af-83e3-7be6c87a5cd2:0', // Remplacer par l'ID réel
-            clientName: clientData.fullName
+            userid: user.id, 
+            usernom: user.nomComplet,
+            userloca: user.localisation
+            
           })}
         >
           <Text style={styles.addServiceIcon}>+</Text>
           <Text style={styles.addServiceText}>Ajouter un service</Text>
         </TouchableOpacity>
+        )}
       </ScrollView>
+
+     
     </SafeAreaView>
   );
 };
@@ -490,6 +467,14 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#222831',
   },
+  toggleContainer: {
+  flexDirection: 'row',
+  alignItems: 'center',
+  justifyContent: 'space-between',
+  marginVertical: 10,
+},
+
+
 });
 
 export default ProfileScreen;

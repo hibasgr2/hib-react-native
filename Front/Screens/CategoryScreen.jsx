@@ -124,7 +124,7 @@ const CategoryScreen = ({ navigation }) => {
         <View>
           <Text style={styles.headerTitle}>Catégories</Text>
           <Text style={styles.headerSubtitle}>
-            Trouvez le service qu’il vous faut
+            Trouvez le service qu'il vous faut
           </Text>
         </View>
       </View>

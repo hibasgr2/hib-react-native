@@ -1,5 +1,8 @@
 import React , { useState, useEffect }from 'react';
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import api from "../api";
+import { ActivityIndicator } from 'react-native';
+
 
 import {
   View,
@@ -24,68 +27,8 @@ const AdminScreen = ({ navigation }) => {
   };
 
   // Données des demandes de services
-  const serviceRequests = [
-    {
-      id: '1',
-      clientName: 'Marie Dupont',
-      clientAvatar: '👩‍💼',
-      serviceTitle: 'Service de Nettoyage',
-      category: 'Ménage',
-      price: '50€',
-      date: '13/01/2026',
-      status: 'pending',
-      urgency: 'normal',
-      description: 'Nettoyage complet appartement 2 pièces'
-    },
-    {
-      id: '2',
-      clientName: 'Jean Martin',
-      clientAvatar: '👨‍💼',
-      serviceTitle: 'Réparation Électrique',
-      category: 'Bricolage',
-      price: '80€',
-      date: '13/01/2026',
-      status: 'pending',
-      urgency: 'high',
-      description: 'Installation luminaire dans salon'
-    },
-    {
-      id: '3',
-      clientName: 'Sophie Bernard',
-      clientAvatar: '👩‍💻',
-      serviceTitle: 'Jardinage',
-      category: 'Jardinage',
-      price: '45€',
-      date: '12/01/2026',
-      status: 'approved',
-      urgency: 'normal',
-      description: 'Tonte pelouse et taille haies'
-    },
-    {
-      id: '4',
-      clientName: 'Pierre Durand',
-      clientAvatar: '👨‍🔧',
-      serviceTitle: 'Déménagement',
-      category: 'Transport',
-      price: '120€',
-      date: '12/01/2026',
-      status: 'rejected',
-      urgency: 'high',
-      description: 'Transport meubles studio vers appartement'
-    },
-    {
-      id: '5',
-      clientName: 'Claire Petit',
-      clientAvatar: '👩‍🎨',
-      serviceTitle: 'Peinture',
-      category: 'Bricolage',
-      price: '65€',
-      date: '11/01/2026',
-      status: 'pending',
-      urgency: 'normal',
-      description: 'Peinture mur chambre 15m²'
-    }
-  ];
+  const [serviceRequests,setServiceRequests] =useState({});
+  const [loading,setLoading] = useState(true)
 
   const renderStatCard = ({ title, value, icon, color }) => (
     <View style={[styles.statCard, { borderLeftColor: color }]}>
@@ -96,6 +39,7 @@ const AdminScreen = ({ navigation }) => {
   );
 
   const renderRequestItem = ({ item }) => (
+  
     <View style={styles.requestCard}>
       {/* Header */}
       <View style={styles.requestHeader}>
@@ -110,39 +54,34 @@ const AdminScreen = ({ navigation }) => {
         <View style={styles.requestStatus}>
           <View style={[
             styles.statusBadge,
-            item.status === 'pending' ? styles.pendingStatus :
-            item.status === 'approved' ? styles.approvedStatus :
+            item.statut === false ? styles.pendingStatus :
+            item.statut === true ? styles.approvedStatus :
             styles.rejectedStatus
           ]}>
             <Text style={[
               styles.statusText,
-              item.status === 'pending' ? styles.pendingText :
-              item.status === 'approved' ? styles.approvedText :
+              item.statut === false ? styles.pendingText :
+              item.statut === true ? styles.approvedText :
               styles.rejectedText
             ]}>
-              {item.status === 'pending' ? 'En attente' :
-               item.status === 'approved' ? 'Approuvé' : 'Rejeté'}
+              {item.statut === false ? 'En attente' :
+               item.statut === true ? 'Approuvé' : 'Rejeté'}
             </Text>
           </View>
           
-          {item.urgency === 'high' && (
-            <View style={styles.urgencyBadge}>
-              <Text style={styles.urgencyText}>Urgent</Text>
-            </View>
-          )}
         </View>
       </View>
 
       {/* Service Info */}
       <View style={styles.serviceInfo}>
-        <Text style={styles.serviceTitle}>{item.serviceTitle}</Text>
-        <Text style={styles.serviceCategory}>{item.category}</Text>
+        <Text style={styles.serviceTitle}>{item.titre}</Text>
+        <Text style={styles.serviceCategory}>{item.categorie}</Text>
         <Text style={styles.serviceDescription}>{item.description}</Text>
-        <Text style={styles.servicePrice}>{item.price}</Text>
+        <Text style={styles.servicePrice}>{item.prix}</Text>
       </View>
 
       {/* Actions */}
-      {item.status === 'pending' && (
+      {item.statut === false && (
         <View style={styles.requestActions}>
           <TouchableOpacity 
             style={[styles.actionButton, styles.rejectButton]}
@@ -161,6 +100,7 @@ const AdminScreen = ({ navigation }) => {
     </View>
   );
 
+
   const handleApproveRequest = (requestId) => {
     // Logique pour approuver la demande
     console.log('Approuver demande:', requestId);
@@ -174,46 +114,42 @@ const AdminScreen = ({ navigation }) => {
   const [token,setToken]= useState(null)
   const [user,setUser] = useState(null);
 
-  const getConnectedUser = async (setToken) => {
-    const userString = await AsyncStorage.getItem("user");
-    const tk = await AsyncStorage.getItem("token");
-  
-    if (!tk || !userString) {
-      Alert.alert("Valeur null")
-      return null;
-    }
-  
-    // const decoded = jwtDecode(tk);
-    
-    // if (decoded.exp * 1000 < Date.now()) {
-    //   // Token expiré → logout automatique
-    //   await AsyncStorage.removeItem("token");
-    //   await AsyncStorage.removeItem("user");
-    //   setToken(null);
-    //   navigation.replace("Login");
-    //   return null
-    // }
-    
-    setToken(tk);
-    console.log(token)
-  
-    return JSON.parse(userString);
-  };
-  
-  
-   useEffect(() => {
-      getConnectedUser(setToken).then((u) => {
-        setUser(u);
-        console.log(user.properties.nomComplet)
-      });
-    }, []);
+  useEffect(() => {
+    const fetchuser= async () => {
+      try {
+        const userparse = JSON.parse(await AsyncStorage.getItem('user'));
+        const tk = await AsyncStorage.getItem("token");
+
+        if (!tk || !userparse) {
+          navigation.replace("AdminLogin");
+          return null;
+        }
+         
+        setToken(tk);
+        setUser(userparse)
+        
+
+      } catch (err) {
+        console.error(err);
+      } 
+    };
+
+    fetchuser();
+  }, []);
+
+  useEffect(() => {
+  if (user) {
+    console.log("User mis à jour :", user);
+    console.log("Services",serviceRequests)
+  }
+}, [user]);
+
 
   const handleLogout = async () => {
     try {
       await AsyncStorage.removeItem("token");
       await AsyncStorage.removeItem("user");
-      setToken(null);
-      setUser(null)
+      
       console.log("Déconnecté avec succès!");
       
       navigation.replace("AdminLogin");
@@ -222,13 +158,27 @@ const AdminScreen = ({ navigation }) => {
     }
   };
 
+  useEffect(() => {
+    api.get("/api/servicesusers")
+      .then(response => {
+        setServiceRequests(response.data);
+        setLoading(false);
+      })
+
+      .catch(error => {
+        console.error(error);
+        Alert.alert("Erreur", "Impossible de charger les services");
+        setLoading(false);
+      });
+  }, []);
+
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#FFFBE0" />
       
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Tableau de Bord {user.properties.nomComplet} </Text>
+        <Text style={styles.headerTitle}>Tableau de Bord {user ? (user.nomComplet): ""} </Text>
         <Text style={styles.headerSubtitle}>Gestion des demandes de services</Text>
 
         <TouchableOpacity 
@@ -310,6 +260,18 @@ const AdminScreen = ({ navigation }) => {
               <Text style={styles.refreshText}>🔄 Actualiser</Text>
             </TouchableOpacity>
           </View>
+
+            {/* ⏳ Loader */}
+            {loading && (
+              <ActivityIndicator size="large" color="#FCDA05" />
+            )}
+
+            {/* ❌ Aucun service */}
+            {!loading && serviceRequests.length == 0 && (
+              <Text style={styles.emptyText}>
+                Aucun service disponible pour le moment
+              </Text>
+            )}
           
           <FlatList
             data={serviceRequests}

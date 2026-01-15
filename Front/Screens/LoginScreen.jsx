@@ -54,7 +54,9 @@ const handleLogin = async () => {
     Alert.alert("Succès", res.data.message);
 
     await AsyncStorage.setItem("token", res.data.token);
-    await AsyncStorage.setItem("user", JSON.stringify(res.data.user));
+    //await AsyncStorage.setItem("user", JSON.stringify(res.data.user));
+    await AsyncStorage.setItem("user", JSON.stringify(res.data.user.properties));
+
 
     Alert.alert("Succes",res.data.message);
 

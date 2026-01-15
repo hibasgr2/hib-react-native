@@ -43,7 +43,7 @@ const AdminLoginScreen = ({ navigation }) => {
      console.log("res",res.data)
 
     await AsyncStorage.setItem("token", res.data.token);
-    await AsyncStorage.setItem("user", JSON.stringify(res.data.user));
+    await AsyncStorage.setItem("user", JSON.stringify(res.data.user.properties));
 
       Alert.alert("Succès", res.data.message);
       navigation.navigate('Admin');

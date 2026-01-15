@@ -13,8 +13,8 @@ import {
   KeyboardAvoidingView,
   Platform
 } from 'react-native';
-// import ApiService from '../api'; // Import de votre fichier API
-import axios from 'axios';
+
+import api from "../api";
 
 const AddServiceScreen = ({ navigation, route }) => {
   const [serviceData, setServiceData] = useState({
@@ -22,18 +22,31 @@ const AddServiceScreen = ({ navigation, route }) => {
     description: '',
     categorie: '',
     prix: '',
-    localisation: '',
+    localisation: route.params.userloca,
     imageUrls: [],
-    statut: 'Disponible'
+    statut: false,
+    userId: route.params.userid,           // 🔥 ID unique
+    nomComplet:route.params.usernom
   });
 
-  const [api, setapi] = useState([])
+  const [demande,setDemande]= useState(false)
+
+  
 
   const [loading, setLoading] = useState(false);
 
 
-  const categories = ['Ménage', 'Jardinage', 'Bricolage', 'Cours', 'Informatique', 'Autre'];
-
+  const categories = ['Réparation et d\'Entretien', 
+    'Soins de la Personne',
+    'Restauration et d\'Alimentation',
+    'Conduite et de Livraison', 
+    'Nettoyage et d\'Hygiène',
+    'Garde et de Surveillance', 
+    'Commerce et de Vente', 
+    'Artisanaux et de Création', 
+    'Santé de Base', 
+    "Loisirs et d'Accueil"];
+  
   const handleInputChange = (field, value) => {
     setServiceData({
       ...serviceData,
@@ -74,10 +87,7 @@ const AddServiceScreen = ({ navigation, route }) => {
     if (!serviceData.prix || isNaN(parseFloat(serviceData.prix))) {
       errors.push('Veuillez saisir un prix valide');
     }
-    if (!serviceData.localisation.trim()) {
-      errors.push('Veuillez saisir une localisation');
-    }
-    
+
     if (errors.length > 0) {
       Alert.alert('Erreur de validation', errors.join('\n'));
       return false;
@@ -91,47 +101,17 @@ const AddServiceScreen = ({ navigation, route }) => {
     setLoading(true);
 
     try {
-      // Préparer les données
-    //   const serviceToSubmit = {
-    //     titre: serviceData.titre,
-    //     description: serviceData.description,
-    //     categorie: serviceData.categorie,
-    //     prix: parseFloat(serviceData.prix),
-    //     localisation: serviceData.localisation,
-    //     imageUrls: serviceData.imageUrls.filter(url => url.trim() !== ''),
-    //     statut: 'Disponible'
-    //   };
+ 
 
-      axios.post('http://192.168.11.105:3001/api/add-service/', serviceData).then(test => setapi(test.data))
+      //axios.post('http://192.168.11.105:3001/api/add-service/', serviceData).then(test => setapi(test.data))
+       //api.post("/api/add-service", serviceData);
+       const response = await api.post("/api/add-service", serviceData)
+        console.log("Service créé:", response.data);
+        Alert.alert("Succès", "Service ajouté avec succès");
+        setDemande(true)
+        Alert.alert("Succès", "Demande sera traite");
+        
 
-    //   // ID utilisateur (à remplacer par l'ID réel de l'utilisateur connecté)
-    //   const userId = route.params?.userId || '4:795d82e6-5f6f-42af-83e3-7be6c87a5cd2:0';
-
-    //   console.log('Envoi du service:', serviceToSubmit);
-
-    //   // Appel API
-    //   const result = await ApiService.createService(serviceToSubmit, userId);
-
-    //   if (result.success) {
-    //     Alert.alert(
-    //       'Succès',
-    //       'Service ajouté avec succès!',
-    //       [
-    //         {
-    //           text: 'OK',
-    //           onPress: () => {
-    //             // Passer les données au screen précédent si nécessaire
-    //             if (route.params?.onServiceAdded) {
-    //               route.params.onServiceAdded(result.data);
-    //             }
-    //             navigation.goBack();
-    //           }
-    //         }
-    //       ]
-    //     );
-    //   } else {
-    //     Alert.alert('Erreur', result.error || 'Impossible d\'ajouter le service');
-    //   }
     } catch (error) {
       console.error('Erreur:', error);
       Alert.alert('Erreur', 'Une erreur est survenue');
@@ -148,7 +128,9 @@ const AddServiceScreen = ({ navigation, route }) => {
       <View style={styles.header}>
         <TouchableOpacity 
           style={styles.backButton}
-          onPress={() => navigation.goBack()}
+           onPress={() => navigation.goBack()
+            
+          }
           disabled={loading}
         >
           <Text style={styles.backIcon}>←</Text>
@@ -161,6 +143,7 @@ const AddServiceScreen = ({ navigation, route }) => {
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.keyboardAvoid}
       >
+        {!demande ? (
         <ScrollView 
           style={styles.scrollView}
           contentContainerStyle={styles.scrollContent}
@@ -239,17 +222,7 @@ const AddServiceScreen = ({ navigation, route }) => {
               </View>
             </View>
 
-            {/* Localisation */}
-            <View style={styles.formGroup}>
-              <Text style={styles.label}>Localisation *</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="Ex: Paris 15ème"
-                value={serviceData.localisation}
-                onChangeText={(text) => handleInputChange('localisation', text)}
-                editable={!loading}
-              />
-            </View>
+            
 
             {/* Bouton de soumission */}
             <TouchableOpacity 
@@ -263,7 +236,9 @@ const AddServiceScreen = ({ navigation, route }) => {
             </TouchableOpacity>
           </View>
           
-        </ScrollView>
+        </ScrollView>): 
+         <Text style={styles.headerTitle}>Mon Profil</Text>}
+
       </KeyboardAvoidingView>
     </SafeAreaView>
   );

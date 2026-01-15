@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { ActivityIndicator } from 'react-native';
+import api from "../api";
+
 import jwtDecode from "jwt-decode";
 import {
   View,
@@ -13,14 +16,21 @@ import {
 } from 'react-native';
 
 const ClientScreen = ({ navigation }) => {
-  const services = [
-    { id: 1, name: 'Nettoyage', icon: '🧹', price: '50€', description: 'Nettoyage complet' },
-    { id: 2, name: 'Jardinage', icon: '🌱', price: '40€', description: 'Entretien jardin' },
-    { id: 3, name: 'Plomberie', icon: '🔧', price: '60€', description: 'Réparations diverses' },
-    { id: 4, name: 'Électricité', icon: '💡', price: '70€', description: 'Installation électrique' },
-    { id: 5, name: 'Peinture', icon: '🎨', price: '45€', description: 'Peinture intérieure/extérieure' },
-    { id: 6, name: 'Déménagement', icon: '📦', price: '100€', description: 'Transport de biens' },
-  ];
+  const [services, setServices] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+  api.get("/api/services")
+    .then(response => {
+      setServices(response.data);
+      setLoading(false);
+    })
+    .catch(error => {
+      console.error(error);
+      Alert.alert("Erreur", "Impossible de charger les services");
+      setLoading(false);
+    });
+}, []);
 
   const [user,setUser] = useState(null);
   const [token, setToken] = useState(null);
@@ -52,27 +62,64 @@ const ClientScreen = ({ navigation }) => {
 //   return null;
 // };
 
-const getConnectedUser = async (setToken) => {
-  const userString = await AsyncStorage.getItem("user");
-  const tk = await AsyncStorage.getItem("token");
+// const getConnectedUser = async (setToken) => {
+//   // const userString = await AsyncStorage.getItem("user");
+//   const userparse = JSON.parse(await AsyncStorage.getItem('user'));
+ 
+//   const tk = await AsyncStorage.getItem("token");
 
-  if (!tk || !userString) {
-     navigation.replace("Login");
-    return null;
-  }
+//   if (!tk || !userString) {
+//      navigation.replace("Login");
+//     return null;
+//   }
 
-  setToken(tk);
+//   setToken(tk);
 
-  return JSON.parse(userString);
-};
+//   return userparse;
+// };
+
+//   useEffect(() => {
+//   if (user) {
+//     console.log("User mis à jour :", user);
+//   }
+// }, [user]);
 
 
- useEffect(() => {
-    getConnectedUser(setToken).then((u) => {
-      setUser(u);
-      console.log(token)
-    });
+//  useEffect(() => {
+//     getConnectedUser(setToken).then((u) => {
+//       setUser(u);
+//       console.log(token)
+//     });
+//   }, []);
+
+  useEffect(() => {
+    const fetchuser= async () => {
+      try {
+        const userparse = JSON.parse(await AsyncStorage.getItem('user'));
+        const tk = await AsyncStorage.getItem("token");
+
+        if (!tk || !userparse) {
+          //navigation.replace("Login");
+          return null;
+        }
+         
+        setToken(tk);
+        setUser(userparse)
+        
+
+      } catch (err) {
+        console.error(err);
+      } 
+    };
+
+    fetchuser();
   }, []);
+
+  useEffect(() => {
+  if (user) {
+    console.log("User mis à jour :", user);
+  }
+}, [user]);
 
 //   const handleLogout = async () => {
 //   try {
@@ -125,7 +172,7 @@ const handleLogout = async () => {
       </View>
 
       {/* Body - Services Grid */}
-      <ScrollView style={styles.body} contentContainerStyle={styles.servicesContainer}>
+      {/* <ScrollView style={styles.body} contentContainerStyle={styles.servicesContainer}>
 
         <View style={{ padding: 20 }}>
         {user ? (
@@ -156,6 +203,51 @@ const handleLogout = async () => {
             </TouchableOpacity>
           ))}
         </View>
+      </ScrollView> */}
+
+       <ScrollView style={styles.body} contentContainerStyle={styles.servicesContainer}>
+
+        <Text style={styles.sectionTitle}>Nos Services</Text>
+
+        {/* ⏳ Loader */}
+        {loading && (
+           <ActivityIndicator size="large" color="#FCDA05" />
+        )}
+
+        {/* ❌ Aucun service */}
+        {!loading && services.length === 0 && (
+          <Text style={styles.emptyText}>
+            Aucun service disponible pour le moment
+          </Text>
+        )}
+
+        {/* ✅ Liste des services */}
+        <View style={styles.grid}>
+          {services.map((service) => (
+            <TouchableOpacity 
+              key={service.id}
+              style={styles.serviceCard}
+              onPress={() => handleServicePress(service)}
+            >
+              <View style={styles.serviceIconContainer}>
+                <Text style={styles.serviceIcon}>🛠️</Text>
+              </View>
+
+              <Text style={styles.serviceName}>
+                {service.titre}
+              </Text>
+
+              <Text style={styles.servicePrice}>
+                {service.prix} €
+              </Text>
+
+              <Text style={styles.serviceDescription}>
+                {service.description}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+
       </ScrollView>
 
       {/* Bottom Bar */}
