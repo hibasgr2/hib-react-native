@@ -1,4 +1,6 @@
 const Service = require("../Models/Service")
+const { driver , neo4j  } = require("../configNeo4j")
+
 
 exports.AddService = async (req, res) => {
     try {
@@ -7,7 +9,7 @@ exports.AddService = async (req, res) => {
             id: Date.now(),
             titre: req.body.titre,
             description: req.body.description,
-            categorie: req.body.categorie,
+            categorie: req.body.categorie.toLowerCase(),
             prix: req.body.prix,
             localisation: req.body.localisation,
             datePublication: req.body.datePublication,
@@ -103,35 +105,35 @@ exports.getServicesWithUsers = async (req, res) => {
 //   }
 // };
 
-exports.getServicesByCategory = async (req, res) => {
-  const session = driver.session();
-  try {
-    const category = req.query.category;
+// exports.getServicesByCategory = async (req, res) => {
+//   const session = driver.session();
+//   try {
+//     const category = req.query.category;
 
-    const result = await session.run(
-      `
-      MATCH (s:Service)
-      WHERE s.categorie = $category
-      RETURN s
-      `,
-      { category }
-    );
+//     const result = await session.run(
+//       `
+//       MATCH (s:Service)
+//       WHERE s.categorie = $category
+//       RETURN s
+//       `,
+//       { category }
+//     );
 
-    const services = result.records.map(record =>
-      record.get('s').properties
-    );
+//     const services = result.records.map(record =>
+//       record.get('s').properties
+//     );
 
-    res.status(200).json(services);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({
-      error: 'Erreur récupération services',
-      details: err.message
-    });
-  } finally {
-    await session.close();
-  }
-};
+//     res.status(200).json(services);
+//   } catch (err) {
+//     console.error(err);
+//     res.status(500).json({
+//       error: 'Erreur récupération services',
+//       details: err.message
+//     });
+//   } finally {
+//     await session.close();
+//   }
+// };
 
 exports.getAllServices = async (req, res) => {
     try {
@@ -164,4 +166,136 @@ exports.getServiceDetails = async (req, res) => {
         });
     }
 };
+
+exports.getServicesByCategory = async (req, res) => {
+  const session = driver.session();
+  try {
+    const category = req.query.category;
+
+    const result = await session.run(
+      `
+      MATCH (s:Service)
+      WHERE s.categorie = $category
+      RETURN s
+      `,
+      { category }
+    );
+
+    const services = result.records.map(record =>
+      record.get('s').properties
+    );
+
+    res.status(200).json(services);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({
+      error: 'Erreur récupération services',
+      details: err.message
+    });
+  } finally {
+    await session.close();
+  }
+};
+
+// exports.getServiceDetails = async (req, res) => {
+//     try {
+//         const serviceId = req.params.id;
+//         const service = new Service();
+
+//         const data = await service.getServiceWithUser(serviceId);
+
+//         if (!data) {
+//             return res.status(404).json({ message: "Service introuvable" });
+//         }
+
+//         res.status(200).json(data);
+//     } catch (err) {
+//         console.error(err);
+//         res.status(500).json({
+//             error: "Erreur récupération détails service",
+//             details: err.message
+//         });
+//     }
+// };
+
+
+exports.approveService = async (req, res) => {
+  try {
+    const serviceId = Number(req.params.requestId); 
+    
+    const service = new Service();
+    const result = await service.approveService(serviceId);
+
+    if (!result) {
+      return res.status(404).json({ message: "Service non trouvé" });
+    }
+
+    res.status(200).json({
+      message: "Service approuvé",
+      data: result
+    });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Erreur approbation service" });
+  }
+};
+
+exports.rejectService = async (req, res) => {
+  try {
+   
+    const serviceId = Number(req.params.requestId); 
+
+    console.log(serviceId)
+    const service = new Service();
+    const result = await service.rejectService(serviceId);
+
+    if (!result) {
+      return res.status(404).json({ message: "Service non trouvé" });
+    }
+
+    res.status(200).json({
+      message: "Service rejeté et supprimé"
+    });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Erreur suppression service" });
+  }
+};
+
+exports.getServiceByUserId = async (req, res) => {
+  const userId = Number(req.params.requestId); // ID du user depuis URL
+  const session = driver.session();
+
+  try {
+    const result = await session.run(
+      `
+      MATCH (u:User)-[:CREATED_SERVICE]->(s:Service)
+      WHERE u.id = $userId
+      RETURN s, u
+      `,
+      { userId }
+    );
+
+    if (result.records.length === 0) {
+      return res.status(404).json({ message: "Aucun service trouvé pour cet utilisateur" });
+    }
+
+    // Retourne tous les services de l'utilisateur
+    const service = record.get("s").properties
+     
+   
+
+    res.status(200).json(service);
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Erreur récupération services" });
+  } finally {
+    await session.close();
+  }
+};
+
+
 

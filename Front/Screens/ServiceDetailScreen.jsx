@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
 import api from "../api";
 
 
@@ -26,20 +25,25 @@ const ServiceDetailScreen = ({ route, navigation }) => {
   const [provider, setProvider] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // 🔹 Charger les détails depuis le backend
- useEffect(() => {
-  api.get(`/api/services/${serviceId}`)
-    .then(response => {
+ 
+useEffect(() => {
+  const fetchService = async () => {
+    try {
+      setLoading(true);
+      const response = await api.get(`/api/service/${serviceId}`);
       setServiceData(response.data.service);
       setProvider(response.data.user);
-      setLoading(false);
-    })
-    .catch(error => {
+    } catch (error) {
       console.error(error);
       Alert.alert("Erreur", "Impossible de charger les détails du service");
+    } finally {
       setLoading(false);
-    });
-}, []);
+    }
+  };
+
+  fetchService(); 
+}, [serviceId]); 
+
 
 
   // ⏳ Loader

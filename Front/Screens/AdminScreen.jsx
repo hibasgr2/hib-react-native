@@ -7,6 +7,7 @@ import { ActivityIndicator } from 'react-native';
 import {
   View,
   Text,
+  Alert,
   TouchableOpacity,
   StyleSheet,
   ScrollView,
@@ -44,10 +45,12 @@ const AdminScreen = ({ navigation }) => {
       {/* Header */}
       <View style={styles.requestHeader}>
         <View style={styles.clientInfo}>
-          <Text style={styles.clientAvatar}>{item.clientAvatar}</Text>
+          <Text style={styles.clientAvatar}>{item.user.clientAvatar}</Text>
           <View style={styles.clientDetails}>
-            <Text style={styles.clientName}>{item.clientName}</Text>
-            <Text style={styles.requestDate}>{item.date}</Text>
+            <Text style={styles.clientName}>{item.user.nomComplet}</Text>
+            <Text style={styles.clientName}>{item.user.email}</Text>
+            <Text style={styles.requestDate}>{item.user.telephone}</Text>
+            <Text style={styles.requestDate}>{item.service.datePublication}</Text>
           </View>
         </View>
         
@@ -60,12 +63,12 @@ const AdminScreen = ({ navigation }) => {
           ]}>
             <Text style={[
               styles.statusText,
-              item.statut === false ? styles.pendingText :
-              item.statut === true ? styles.approvedText :
+              item.service.statut === false ? styles.pendingText :
+              item.service.statut === true ? styles.approvedText :
               styles.rejectedText
             ]}>
-              {item.statut === false ? 'En attente' :
-               item.statut === true ? 'Approuvé' : 'Rejeté'}
+              {item.service.statut === false ? 'En attente' :
+               item.service.statut === true ? 'Approuvé' : 'Rejeté'}
             </Text>
           </View>
           
@@ -74,24 +77,25 @@ const AdminScreen = ({ navigation }) => {
 
       {/* Service Info */}
       <View style={styles.serviceInfo}>
-        <Text style={styles.serviceTitle}>{item.titre}</Text>
-        <Text style={styles.serviceCategory}>{item.categorie}</Text>
-        <Text style={styles.serviceDescription}>{item.description}</Text>
-        <Text style={styles.servicePrice}>{item.prix}</Text>
+        <Text style={styles.serviceTitle}>{item.service.titre}</Text>
+        <Text style={styles.serviceCategory}>{item.service.categorie}</Text>
+        <Text style={styles.serviceDescription}>{item.service.description}</Text>
+        <Text style={styles.servicePrice}>{item.service.prix}</Text>
       </View>
 
       {/* Actions */}
-      {item.statut === false && (
+      {item.service.statut === false && (
         <View style={styles.requestActions}>
           <TouchableOpacity 
             style={[styles.actionButton, styles.rejectButton]}
-            onPress={() => handleRejectRequest(item.id)}
+            onPress={() => handleRejectRequest(item.service.id)}
           >
+            
             <Text style={styles.rejectButtonText}>Rejeter</Text>
           </TouchableOpacity>
           <TouchableOpacity 
             style={[styles.actionButton, styles.approveButton]}
-            onPress={() => handleApproveRequest(item.id)}
+            onPress={() => handleApproveRequest(item.service.id)}
           >
             <Text style={styles.approveButtonText}>Approuver</Text>
           </TouchableOpacity>
@@ -100,16 +104,37 @@ const AdminScreen = ({ navigation }) => {
     </View>
   );
 
+  // const handleApproveRequest = (requestId) => {
+  //   // Logique pour approuver la demande
+  //   console.log('Approuver demande:', requestId);
+  // };
 
-  const handleApproveRequest = (requestId) => {
-    // Logique pour approuver la demande
-    console.log('Approuver demande:', requestId);
-  };
+  // const handleRejectRequest = (requestId) => {
+  //   // Logique pour rejeter la demande
+  //   console.log('Rejeter demande:', requestId);
+  // };
 
-  const handleRejectRequest = (requestId) => {
-    // Logique pour rejeter la demande
-    console.log('Rejeter demande:', requestId);
-  };
+  const handleRejectRequest = async (requestId) => {
+  try {
+    console.log(requestId)
+    await api.delete(`/api/service/reject/${requestId}`);
+    Alert.alert("Rejeté", "Service supprimé");
+  } catch (error) {
+    console.error(error);
+    Alert.alert("Erreur", "Impossible de rejeter");
+  }
+};
+
+const handleApproveRequest = async (requestId) => {
+  try {
+    await api.put(`/api/service/approve/${requestId}`);
+    Alert.alert("Succès", "Service approuvé");
+  } catch (error) {
+    console.error(error);
+    Alert.alert("Erreur", "Impossible d'approuver");
+  }
+};
+
 
   const [token,setToken]= useState(null)
   const [user,setUser] = useState(null);
@@ -138,7 +163,7 @@ const AdminScreen = ({ navigation }) => {
   }, []);
 
   useEffect(() => {
-  if (user) {
+  if (user && serviceRequests) {
     console.log("User mis à jour :", user);
     console.log("Services",serviceRequests)
   }
@@ -158,19 +183,36 @@ const AdminScreen = ({ navigation }) => {
     }
   };
 
-  useEffect(() => {
-    api.get("/api/servicesusers")
-      .then(response => {
-        setServiceRequests(response.data);
-        setLoading(false);
-      })
+  // useEffect(() => {
+  //   api.get("/api/servicesusers")
+  //   .then(response => {
+  //     setServiceRequests(response.data);
+  //     setLoading(false);
 
-      .catch(error => {
-        console.error(error);
-        Alert.alert("Erreur", "Impossible de charger les services");
-        setLoading(false);
-      });
-  }, []);
+  //     }).catch(error => {
+  //       console.error(error);
+  //       Alert.alert("Erreur", "Impossible de charger les services");
+  //       setLoading(false);
+  //     });
+  // }, []);
+
+  useEffect(() => {
+  fetchServices(); 
+}, []);
+
+  const fetchServices = async () => {
+  setLoading(true);
+  try {
+    const response = await api.get("/api/servicesusers");
+    setServiceRequests(response.data);
+  } catch (err) {
+    console.error(err);
+    Alert.alert("Erreur", "Impossible de charger les services");
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   return (
     <SafeAreaView style={styles.container}>
@@ -189,7 +231,6 @@ const AdminScreen = ({ navigation }) => {
                   <Text style={styles.bottomBarText}>logout</Text>
                 </TouchableOpacity>
       </View>
-
 
       <ScrollView style={styles.body} contentContainerStyle={styles.scrollContent}>
         {/* Statistics Section */}
@@ -236,27 +277,12 @@ const AdminScreen = ({ navigation }) => {
           </View>
         </View>
 
-        {/* Filter Tabs */}
-        <View style={styles.filterSection}>
-          <TouchableOpacity style={[styles.filterTab, styles.activeFilter]}>
-            <Text style={styles.activeFilterText}>En attente ({stats.pendingRequests})</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.filterTab}>
-            <Text style={styles.filterText}>Approuvées</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.filterTab}>
-            <Text style={styles.filterText}>Rejetées</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.filterTab}>
-            <Text style={styles.filterText}>Toutes</Text>
-          </TouchableOpacity>
-        </View>
 
         {/* Requests List */}
         <View style={styles.requestsSection}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Demandes de services</Text>
-            <TouchableOpacity style={styles.refreshButton}>
+            <TouchableOpacity style={styles.refreshButton}  onPress={fetchServices}>
               <Text style={styles.refreshText}>🔄 Actualiser</Text>
             </TouchableOpacity>
           </View>
@@ -276,7 +302,7 @@ const AdminScreen = ({ navigation }) => {
           <FlatList
             data={serviceRequests}
             renderItem={renderRequestItem}
-            keyExtractor={item => item.id}
+            keyExtractor={item => item.service.id}
             scrollEnabled={false}
             contentContainerStyle={styles.requestsList}
           />

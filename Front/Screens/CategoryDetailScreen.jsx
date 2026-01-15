@@ -1,55 +1,93 @@
 // CategoryDetailScreen.jsx
 import React, { useEffect, useState } from 'react';
 import api from "../api";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+
 
 import {
   View,
   Text,
   FlatList,
+  SafeAreaView,
   TouchableOpacity,
   StyleSheet,
-  SafeAreaView,
   ActivityIndicator,
 } from 'react-native';
 
 
-
 const CategoryDetailScreen = ({ route, navigation }) => {
   const { categoryName } = route.params;
+  console.log("cat",categoryName)
 
   const [services, setServices] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [user,setUser] = useState(null);
+  const [token, setToken] = useState(null);
+  
+  
 
   useEffect(() => {
-    const fetchServices = async () => {
+  const fetchServices = async () => {
+    try {
+      setLoading(true);
+      const res = await api.get("/api/filtre-service", {
+        params: { category: categoryName.trim() },
+      });
+      setServices(res.data);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  fetchServices(); 
+
+}, [categoryName]);
+
+
+  useEffect(() => {
+    const fetchuser= async () => {
       try {
-        const res = await api.get(
-          "/api/filtre-service",
-          {
-            params: {
-              category: categoryName.trim().toLowerCase(),
-            },
-          }
-        );
-        setServices(res.data);
+        const userparse = JSON.parse(await AsyncStorage.getItem('user'));
+        const tk = await AsyncStorage.getItem("token");
+
+        if (!tk || !userparse) {
+          //navigation.replace("Login");
+          return null;
+        }
+         
+        setToken(tk);
+        setUser(userparse)
+        
+
       } catch (err) {
         console.error(err);
-      } finally {
-        setLoading(false);
-      }
+      } 
     };
 
-    fetchServices();
+    fetchuser();
   }, []);
+
+  useEffect(() => {
+  if (user) {
+    console.log("User mis à jour :", user);
+  }
+}, [user]);
 
   if (loading) {
     return <ActivityIndicator size="large" style={{ marginTop: 50 }} />;
   }
 
+  const filteredServices = services.filter(service =>
+  service.statut === true && service.localisation === user?.localisation
+);
+
+
   return (
     <SafeAreaView style={{ flex: 1 }}>
       <FlatList
-        data={services}
+        data={filteredServices}
         keyExtractor={(item) => item.id.toString()}
         contentContainerStyle={{ padding: 16 }}
         renderItem={({ item }) => (
@@ -63,7 +101,7 @@ const CategoryDetailScreen = ({ route, navigation }) => {
             <Text style={styles.price}>{item.prix} €</Text>
             <Text style={styles.location}>{item.localisation}</Text>
             <Text style={styles.provider}>
-              Prestataire: {item.provider ? item.provider.nomComplet : 'Non défini'}
+              Prestataire: { item.nomComplet }
             </Text>
           </TouchableOpacity>
         )}

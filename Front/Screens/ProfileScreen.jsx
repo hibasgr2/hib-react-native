@@ -6,6 +6,7 @@ import {
   View,
   Text,
   TouchableOpacity,
+  ActivityIndicator,
   StyleSheet,
   ScrollView,
   SafeAreaView,
@@ -18,8 +19,10 @@ const ProfileScreen = ({ navigation  }) => {
   // Données du client (exemple)
  const [user,setUser] = useState({});
  const [token,setToken] = useState(null);
- const [service,setService] = useState(null);
+ const [serviceData,setServiceData] = useState(null);
  const [showAddService, setShowAddService] = useState(false);
+ const [loading, setLoading] = useState(true);
+
 
  
 
@@ -53,6 +56,33 @@ const ProfileScreen = ({ navigation  }) => {
   }
 }, [user]);
 
+
+useEffect(() => {
+  const fetchService = async () => {
+    try {
+      setLoading(true);
+      const response = await api.get(`/api/servicebyuserId/${user.id}`);
+      console.log(response.data)
+      setServiceData(response.data);
+
+    } catch (error) {
+      console.error(error);
+      Alert.alert("Erreur", "Impossible de charger les détails du service");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  fetchService(); 
+}, [user.id]); 
+
+ if (loading) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <ActivityIndicator size="large" color="#FCDA05" style={{ marginTop: 50 }} />
+      </SafeAreaView>
+    );
+  }
 
 
   return (
@@ -117,48 +147,22 @@ const ProfileScreen = ({ navigation  }) => {
           </View>
         </View>
 
-        {/* Statistics */}
-
-
-        {/* Recent Services */}
-        {/* <View style={styles.servicesSection}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Services récents</Text>
-            <TouchableOpacity onPress={() => navigation.navigate('MyServices')}>
-              <Text style={styles.seeAll}>Voir tout</Text>
-            </TouchableOpacity>
-          </View>
-          
-          {clientServices.map((service) => (
-            <View key={service.id} style={styles.serviceItem}>
-              <View style={styles.serviceHeader}>
-                <Text style={styles.serviceTitle}>{service.title}</Text>
-                <View style={[styles.statusBadge, service.status === 'Terminé' ? styles.completedStatus : styles.ongoingStatus]}>
-                  <Text style={styles.statusText}>{service.status}</Text>
+        <View style={styles.separator} />
+        
+                {/* 🛠️ SERVICE */}
+                <View style={styles.serviceInfo}>
+                  <Text style={styles.sectionTitle}>Détails du service</Text>
+        
+                  <Info label="📋 Titre" value={serviceData.titre} />
+                  <Info label="📝 Description" value={serviceData.description} />
+                  <Info label="🏷️ Catégorie" value={serviceData.categorie} />
+                  <Info label="📍 Localisation" value={serviceData.localisation} />
+                  <Info label="💰 Prix" value={`${serviceData.prix} €`} highlight />
+                  <Info
+                    label="📅 Publié le"
+                    value={new Date(serviceData.datePublication).toLocaleDateString()}
+                  />
                 </View>
-              </View>
-              
-              <View style={styles.serviceDetails}>
-                <Text style={styles.serviceCategory}>{service.category}</Text>
-                <Text style={styles.servicePrice}>{service.price}</Text>
-                <Text style={styles.serviceDate}>{service.date}</Text>
-              </View>
-              
-              {service.rating && (
-                <View style={styles.ratingContainer}>
-                  <Text style={styles.ratingLabel}>Note:</Text>
-                  <View style={styles.stars}>
-                    {[...Array(5)].map((_, index) => (
-                      <Text key={index} style={index < service.rating ? styles.star : styles.emptyStar}>
-                        ⭐
-                      </Text>
-                    ))}
-                  </View>
-                </View>
-              )}
-            </View>
-          ))}
-        </View> */}
 
         {/* Add Service Button */}
 
@@ -183,6 +187,16 @@ const ProfileScreen = ({ navigation  }) => {
     </SafeAreaView>
   );
 };
+
+const Info = ({ label, value, highlight }) => (
+  <View style={styles.infoItem}>
+    <Text style={styles.infoLabel}>{label}</Text>
+    <Text style={highlight ? styles.priceValue : styles.infoValue}>
+      {value}
+    </Text>
+  </View>
+);
+
 
 const styles = StyleSheet.create({
   container: {

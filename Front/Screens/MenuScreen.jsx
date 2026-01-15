@@ -1,4 +1,3 @@
-// MenuScreen.jsx
 import React from 'react';
 import {
   View,
@@ -11,6 +10,7 @@ import {
 } from 'react-native';
 
 const MenuScreen = ({ navigation }) => {
+
   const accueil = [
     { name: 'Accueil', icon: '🏠' },
   ];
@@ -76,6 +76,7 @@ const MenuScreen = ({ navigation }) => {
               navigation.navigate('CategoryDetail', {
                 categoryName: item.name,
               })
+
             }
           >
             <View style={styles.left}>
@@ -99,6 +100,9 @@ const MenuScreen = ({ navigation }) => {
   );
 };
 
+export default MenuScreen;
+
+/* 🔒 STYLES IDENTIQUES (inchangés) */
 
 const styles = StyleSheet.create({
   container: {
@@ -168,6 +172,3 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
 });
-
-export default MenuScreen;
-

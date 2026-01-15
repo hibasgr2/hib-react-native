@@ -25,7 +25,7 @@ const AddServiceScreen = ({ navigation, route }) => {
     localisation: route.params.userloca,
     imageUrls: [],
     statut: false,
-    userId: route.params.userid,           // 🔥 ID unique
+    userId: route.params.userid,          
     nomComplet:route.params.usernom
   });
 

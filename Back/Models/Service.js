@@ -15,7 +15,6 @@ class Service{
         
     }
 
-
     // CREATE (c:Client {
     //                 idC: $idC,
     //                 name: $name,
@@ -82,26 +81,27 @@ class Service{
     }
 
 
-//     async getServiceWithUser() {
-//     const session = driver.session();
-//     try {
-//         const result = await session.run(
-//              `MATCH (u:User)-[:CREATED_SERVICE]->(s:Service)
-//                 RETURN s, u
-//                 ORDER BY s.datePublication DESC`,
-           
-//         );
+async getServiceWithUser(serviceId) {
+    const session = driver.session();
+    try {
+        const result = await session.run(
+            `
+            MATCH (u:User)-[:CREATED_SERVICE]->(s:Service {id: $id})
+            RETURN s, u
+            `,
+            { id: Number(serviceId) }
+        );
 
-//         if (result.records.length === 0) return null;
+        if (result.records.length === 0) return null;
 
-//         return {
-//             service: result.records[0].get('s').properties,
-//             user: result.records[0].get('u').properties
-//         };
-//     } finally {
-//         await session.close();
-//     }
-// }
+        return {
+            service: result.records[0].get('s').properties,
+            user: result.records[0].get('u').properties
+        };
+    } finally {
+        await session.close();
+    }
+}
 
 async getServicesWithUsers() {
   const session = driver.session();
@@ -109,6 +109,7 @@ async getServicesWithUsers() {
   try {
     const result = await session.run(`
       MATCH (u:User)-[:CREATED_SERVICE]->(s:Service)
+      WHERE s.statut = false
       RETURN s, u
       ORDER BY s.datePublication DESC
     `);
@@ -128,7 +129,6 @@ async getServicesWithUsers() {
   }
 }
 
-
     async deleteAllServices(){
         const session = driver.session()
         const res = await session.run(
@@ -144,6 +144,64 @@ async getServicesWithUsers() {
         )
         return res.records;
     }
+
+  async rejectService(serviceId) {
+    const session = driver.session();
+
+    try {
+      const result = await session.run(
+        `
+        MATCH (s:Service {id: $serviceId})
+        RETURN s
+        `,
+        { serviceId }
+      );
+
+      if (result.records.length === 0) return null;
+
+      await session.run(
+        `
+        MATCH (s:Service {id: $serviceId})
+        DETACH DELETE s
+        `,
+        { serviceId }
+      );
+
+      return true;
+
+    } finally {
+      await session.close();
+    }
+  }
+
+    async approveService(serviceId) {
+    const session = driver.session();
+
+    try {
+      const result = await session.run(
+        `
+        MATCH (u:User)-[:CREATED_SERVICE]->(s:Service {id: $serviceId})
+        SET s.statut = true,
+            u.compteProfessionnel = true
+        RETURN s, u
+        `,
+        { serviceId }
+      );
+
+      if (result.records.length === 0) return null;
+
+      return {
+        service: result.records[0].get("s").properties,
+        user: result.records[0].get("u").properties
+      };
+
+    } finally {
+      await session.close();
+    }
+  }
+
+
 }
 
 module.exports = Service
+

@@ -144,6 +144,9 @@ const handleLogout = async () => {
   }
 };
 
+const filteredServices = services.filter(service =>
+  service.statut === true && service.localisation === user?.localisation
+);
 
 
   return (
@@ -222,7 +225,7 @@ const handleLogout = async () => {
         )}
 
         {/* ✅ Liste des services */}
-        <View style={styles.grid}>
+        {/* <View style={styles.grid}>
           {services.map((service) => (
             <TouchableOpacity 
               key={service.id}
@@ -244,6 +247,27 @@ const handleLogout = async () => {
               <Text style={styles.serviceDescription}>
                 {service.description}
               </Text>
+            </TouchableOpacity>
+          ))}
+        </View> */}
+
+        <View style={styles.grid}>
+          {filteredServices.map((service) => (
+            <TouchableOpacity 
+              key={service.id}
+              style={styles.serviceCard}
+              onPress={() => handleServicePress(service)}
+            >
+              <View style={styles.serviceIconContainer}>
+                <Text style={styles.serviceIcon}>🛠️</Text>
+              </View>
+
+              <Text style={styles.serviceName}>{service.titre}</Text>
+
+              <Text style={styles.servicePrice}>{service.prix} €</Text>
+
+              <Text style={styles.serviceDescription}>{service.description}</Text>
+        
             </TouchableOpacity>
           ))}
         </View>
