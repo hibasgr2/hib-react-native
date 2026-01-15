@@ -23,7 +23,8 @@ const CreateAccountScreen = ({ navigation }) => {
     telephone: '',
     motdepasse: '',
     localisation: '',
-    CIN:''
+    CIN:'',
+    rating:1,
   });
 const [open, setOpen] = useState(false);
 const [selectedId, setSelectedId] = useState(null); 
@@ -160,7 +161,7 @@ const [villes, setVilles] = useState([]);
             style={styles.input}
             value={formData.telephone}
             onChangeText={(value) => handleInputChange('telephone', value)}
-            placeholder="+33 6 12 34 56 78"
+            placeholder="06/7...."
             placeholderTextColor="#999"
             keyboardType="phone-pad"
           />

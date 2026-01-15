@@ -106,11 +106,7 @@ const AdminLoginScreen = ({ navigation }) => {
             <Text style={styles.loginButtonText}>Se connecter</Text>
           </TouchableOpacity>
 
-          <View style={styles.demoInfo}>
-            <Text style={styles.demoTitle}>Informations de démo:</Text>
-            <Text style={styles.demoText}>Email: admin@services.com</Text>
-            <Text style={styles.demoText}>Mot de passe: admin123</Text>
-          </View>
+          
 
           <View style={styles.backContainer}>
             <TouchableOpacity 

@@ -11,7 +11,7 @@ router.get("/filtre-service",serviceController.getServicesByCategory)
 router.get("/servicesusers", serviceController.getServicesWithUsers);
 router.delete("/service/reject/:requestId", serviceController.rejectService);
 router.put("/service/approve/:requestId",serviceController.approveService);
-router.put("/servicebyuserId/:requestId",serviceController.getServiceByUserId);
+router.get("/servicebyuserId/:requestId",serviceController.getServiceByUserId);
 
 
 

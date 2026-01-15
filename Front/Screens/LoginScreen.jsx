@@ -7,6 +7,7 @@ import {
   View,
   Text,
   TextInput,
+  ScrollView,
   TouchableOpacity,
   StyleSheet,
   StatusBar,
@@ -70,6 +71,7 @@ const handleLogin = async () => {
 
 
   return (
+    <ScrollView style={styles.body} contentContainerStyle={styles.scrollContent}>
     <KeyboardAvoidingView 
       style={styles.container}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -139,11 +141,7 @@ const handleLogin = async () => {
           <Text style={styles.loginButtonText}>Se connecter</Text>
         </TouchableOpacity>
 
-        <View style={styles.dividerContainer}>
-          <View style={styles.divider} />
-          <Text style={styles.dividerText}>ou</Text>
-          <View style={styles.divider} />
-        </View>
+        
 
         <View style={styles.signupContainer}>
           <Text style={styles.signupText}>Pas encore de compte ?</Text>
@@ -156,6 +154,7 @@ const handleLogin = async () => {
         </View>
       </View>
     </KeyboardAvoidingView>
+    </ScrollView>
   );
 };
 
@@ -169,6 +168,9 @@ const styles = StyleSheet.create({
     paddingTop: 60,
     paddingBottom: 30,
     backgroundColor: '#FFFBE0',
+  },
+   scrollContent: {
+    padding: 20,
   },
   logoContainer: {
     width: 80,

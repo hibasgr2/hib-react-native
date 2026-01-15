@@ -22,6 +22,7 @@ const ProfileScreen = ({ navigation  }) => {
  const [serviceData,setServiceData] = useState(null);
  const [showAddService, setShowAddService] = useState(false);
  const [loading, setLoading] = useState(true);
+ const [userId,setUserId] = useState();
 
 
  
@@ -40,7 +41,7 @@ const ProfileScreen = ({ navigation  }) => {
          
         setToken(tk);
         setUser(userparse)
-        
+        setUserId(userparse.id)
 
       } catch (err) {
         console.error(err);
@@ -51,20 +52,27 @@ const ProfileScreen = ({ navigation  }) => {
   }, []);
 
   useEffect(() => {
-  if (user) {
+  if (user ) {
     console.log("User mis à jour :", user);
+    console.log("service mis à jour :", serviceData);
+    
   }
 }, [user]);
 
 
 useEffect(() => {
-  const fetchService = async () => {
+  const fetchService = async  () => {
     try {
+      
+      if(user != null){
+      
       setLoading(true);
-      const response = await api.get(`/api/servicebyuserId/${user.id}`);
-      console.log(response.data)
+      const response = await api.get(`/api/servicebyuserId/${userId}`);
+      
+      
       setServiceData(response.data);
-
+     
+      }
     } catch (error) {
       console.error(error);
       Alert.alert("Erreur", "Impossible de charger les détails du service");
@@ -74,9 +82,10 @@ useEffect(() => {
   };
 
   fetchService(); 
-}, [user.id]); 
+}, [userId]); 
 
  if (loading) {
+ 
     return (
       <SafeAreaView style={styles.container}>
         <ActivityIndicator size="large" color="#FCDA05" style={{ marginTop: 50 }} />
@@ -99,13 +108,28 @@ useEffect(() => {
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Mon Profil</Text>
         <View style={styles.placeholder} />
-         <View style={styles.toggleContainer}>
-          <Text style={styles.toggleText}>Mode fournisseur</Text>
-          <Switch
+        <View style={styles.toggleContainer}>
+          <Text style={styles.toggleText}>
+          {user?.compteProfessionnel  ? "Déjà fournisseur" : "Mode Fournisseur"}
+        </Text>
+
+
+          {/* <Switch 
             value={showAddService}
             onValueChange={setShowAddService}
-          />
+            disabled={user.compteProfessionnel === true}
+          /> */}
+          <Switch
+          value={showAddService}
+          onValueChange={setShowAddService}
+          disabled={user.compteProfessionnel === true || serviceData.statut === false}
+          trackColor={{ false: "#ccc", true: "#FFD700" }} 
+          thumbColor={showAddService ? "#FFD700" : "#f4f3f4"} 
+        />
+
         </View>
+
+
 
       </View>
 
@@ -118,11 +142,23 @@ useEffect(() => {
             </View>
             <View style={styles.profileInfo}>
               <Text style={styles.fullName}>{user.nomComplet}</Text>
-              <Text style={styles.memberSince}>Membre depuis {user.dateInscription}</Text>
+              <Text style={styles.toggleText}>
+                {user?.compteProfessionnel ? "Compte fournisseur" : "Compte Client"}
+              </Text>
+              
+              {/* {user.compteProfessionnel ? (
               <View style={styles.ratingContainer}>
+                {Array.from({ length: user.rating }, (_, i) => (
+                  <Text key={i} style={styles.star}>⭐ hollaaa</Text>
+                ))}
+              </View>
+              ):""} */}
+
+                 {user.compteProfessionnel ? (
+                <View style={styles.ratingContainer}>
                 <Text style={styles.star}>⭐</Text>
                 <Text style={styles.ratingText}>{user.rating}</Text>
-              </View>
+              </View>):""}
             </View>
           </View>
         </View>
@@ -147,9 +183,10 @@ useEffect(() => {
           </View>
         </View>
 
-        <View style={styles.separator} />
-        
-                {/* 🛠️ SERVICE */}
+         <View style={styles.infoSection}>
+                
+                {/* {serviceData ? (
+               
                 <View style={styles.serviceInfo}>
                   <Text style={styles.sectionTitle}>Détails du service</Text>
         
@@ -163,6 +200,40 @@ useEffect(() => {
                     value={new Date(serviceData.datePublication).toLocaleDateString()}
                   />
                 </View>
+                ):
+                 <Text style={styles.infoText}>
+  Pour rendre votre compte professionnel, veuillez activer le mode « Fournisseur ».
+</Text>} */}
+
+{serviceData ? (
+  <View style={styles.serviceInfo}>
+    <Text style={styles.sectionTitle}>Détails du service</Text>
+
+    {serviceData.statut === false ? (
+      <Text style={styles.infoText}>
+        ✅ Votre demande de service a été envoyée et est en attente.
+      </Text>
+    ) : (
+      <>
+        <Info label="📋 Titre" value={serviceData.titre} />
+        <Info label="📝 Description" value={serviceData.description} />
+        <Info label="🏷️ Catégorie" value={serviceData.categorie} />
+        <Info label="📍 Localisation" value={serviceData.localisation} />
+        <Info label="💰 Prix" value={`${serviceData.prix} €`} highlight />
+        <Info
+          label="📅 Publié le"
+          value={new Date(serviceData.datePublication).toLocaleDateString()}
+        />
+      </>
+    )}
+  </View>
+) : (
+  <Text style={styles.infoText}>
+    Pour rendre votre compte professionnel, veuillez activer le mode « Fournisseur ».
+  </Text>
+)}
+
+      </View>
 
         {/* Add Service Button */}
 

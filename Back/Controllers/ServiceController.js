@@ -265,33 +265,33 @@ exports.rejectService = async (req, res) => {
 };
 
 exports.getServiceByUserId = async (req, res) => {
-  const userId = Number(req.params.requestId); // ID du user depuis URL
+  const userId = Number(req.params.requestId); 
   const session = driver.session();
-
+ 
   try {
     const result = await session.run(
-      `
-      MATCH (u:User)-[:CREATED_SERVICE]->(s:Service)
-      WHERE u.id = $userId
-      RETURN s, u
-      `,
-      { userId }
-    );
+   `
+            MATCH (u:User {id: $id})-[:CREATED_SERVICE]->(s:Service )
+            RETURN s, u
+            `,
+            { id: Number(userId) }
+);
 
+    
     if (result.records.length === 0) {
-      return res.status(404).json({ message: "Aucun service trouvé pour cet utilisateur" });
+      console.log("Aucun service trouvé pour cet utilisateur")
+      return res.status(200).json(null);
     }
 
     // Retourne tous les services de l'utilisateur
-    const service = record.get("s").properties
-     
-   
+    const service = result.records[0].get("s").properties;
 
+     
     res.status(200).json(service);
 
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: "Erreur récupération services" });
+    //res.status(500).json({ error: "Erreur récupération services" });
   } finally {
     await session.close();
   }

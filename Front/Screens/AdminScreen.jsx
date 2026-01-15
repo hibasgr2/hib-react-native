@@ -18,14 +18,36 @@ import {
 
 const AdminScreen = ({ navigation }) => {
   // Données des statistiques
-  const stats = {
-    totalRequests: 45,
-    pendingRequests: 12,
-    totalProviders: 28,
-    totalClients: 156,
-    completedServices: 234,
-    revenue: '12,450€'
-  };
+  // const stats = {
+  //   totalRequests: 45,
+  //   pendingRequests: 12,
+  //   totalProviders: 28,
+  //   totalClients: 156,
+  //   completedServices: 234,
+  //   revenue: '12,450€'
+  // };
+
+
+  const [stats, setStats] = useState(null);
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        
+        const res = await api.get("/api/stats");
+        console.log(res.data)
+        setStats(res.data);
+      } catch (err) {
+        console.error(err);
+      }
+    };
+
+    fetchStats();
+  }, [user]);
+
+
+
+
 
   // Données des demandes de services
   const [serviceRequests,setServiceRequests] =useState({});
@@ -223,23 +245,23 @@ const handleApproveRequest = async (requestId) => {
         <Text style={styles.headerTitle}>Tableau de Bord {user ? (user.nomComplet): ""} </Text>
         <Text style={styles.headerSubtitle}>Gestion des demandes de services</Text>
 
-        <TouchableOpacity 
-                  style={styles.bottomBarItem}
-                  onPress={handleLogout}
-                >
-                  <Text style={styles.bottomBarIcon}>⚙️</Text>
-                  <Text style={styles.bottomBarText}>logout</Text>
-                </TouchableOpacity>
+       <TouchableOpacity
+          onPress={handleLogout}
+          style={styles.smallLogoutButton}
+        >
+          <Text style={styles.smallLogoutIcon}> ➜]</Text>
+        </TouchableOpacity>
+            
       </View>
 
       <ScrollView style={styles.body} contentContainerStyle={styles.scrollContent}>
         {/* Statistics Section */}
         <View style={styles.statsSection}>
           <Text style={styles.sectionTitle}>Statistiques générales</Text>
-          
+          {stats ? (
           <View style={styles.statsGrid}>
             {renderStatCard({
-              title: 'Total demandes',
+              title: 'Total services',
               value: stats.totalRequests,
               icon: '📋',
               color: '#FCDA05'
@@ -268,13 +290,9 @@ const handleApproveRequest = async (requestId) => {
               icon: '✅',
               color: '#96CEB4'
             })}
-            {renderStatCard({
-              title: 'Revenus',
-              value: stats.revenue,
-              icon: '💰',
-              color: '#FECA57'
-            })}
+            
           </View>
+          ):""}
         </View>
 
 
@@ -313,6 +331,27 @@ const handleApproveRequest = async (requestId) => {
 };
 
 const styles = StyleSheet.create({
+  headerTop: {
+  flexDirection: 'row',
+  justifyContent: 'space-between',
+  alignItems: 'center',
+},
+
+smallLogoutButton: {
+  width: 36,
+  height: 36,
+  borderRadius: 18,
+  backgroundColor: '#e7ce27',
+  justifyContent: 'center',
+  alignItems: 'center',
+  marginLeft: 'auto',
+},
+
+smallLogoutIcon: {
+  color: '#FFF',
+  fontSize: 16,
+  fontWeight: 'bold',
+},
   container: {
     flex: 1,
     backgroundColor: '#F5F5F5',

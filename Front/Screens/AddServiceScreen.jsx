@@ -29,12 +29,8 @@ const AddServiceScreen = ({ navigation, route }) => {
     nomComplet:route.params.usernom
   });
 
-  const [demande,setDemande]= useState(false)
-
-  
-
+  const [demande, setDemande] = useState(false);
   const [loading, setLoading] = useState(false);
-
 
   const categories = ['Réparation et d\'Entretien', 
     'Soins de la Personne',
@@ -101,23 +97,20 @@ const AddServiceScreen = ({ navigation, route }) => {
     setLoading(true);
 
     try {
- 
-
-      //axios.post('http://192.168.11.105:3001/api/add-service/', serviceData).then(test => setapi(test.data))
-       //api.post("/api/add-service", serviceData);
-       const response = await api.post("/api/add-service", serviceData)
-        console.log("Service créé:", response.data);
-        Alert.alert("Succès", "Service ajouté avec succès");
-        setDemande(true)
-        Alert.alert("Succès", "Demande sera traite");
-        
-
+      const response = await api.post("/api/add-service", serviceData);
+      console.log("Service créé:", response.data);
+      Alert.alert("Succès", "Service ajouté avec succès");
+      setDemande(true);
     } catch (error) {
       console.error('Erreur:', error);
       Alert.alert('Erreur', 'Une erreur est survenue');
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleBackToHome = () => {
+    navigation.goBack();
   };
 
   return (
@@ -128,9 +121,7 @@ const AddServiceScreen = ({ navigation, route }) => {
       <View style={styles.header}>
         <TouchableOpacity 
           style={styles.backButton}
-           onPress={() => navigation.goBack()
-            
-          }
+          onPress={() => navigation.goBack()}
           disabled={loading}
         >
           <Text style={styles.backIcon}>←</Text>
@@ -144,107 +135,160 @@ const AddServiceScreen = ({ navigation, route }) => {
         style={styles.keyboardAvoid}
       >
         {!demande ? (
-        <ScrollView 
-          style={styles.scrollView}
-          contentContainerStyle={styles.scrollContent}
-          showsVerticalScrollIndicator={false}
-        >
-           
-          {/* Formulaire */}
-          <View style={styles.formContainer}>
-            {/* Titre */}
-            <View style={styles.formGroup}>
-              <Text style={styles.label}>Titre du service *</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="Ex: Nettoyage complet"
-                value={serviceData.titre}
-                onChangeText={(text) => handleInputChange('titre', text)}
-                editable={!loading}
-              />
-            </View>
-
-            {/* Catégorie */}
-            <View style={styles.formGroup}>
-              <Text style={styles.label}>Catégorie *</Text>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.categoriesScroll}>
-                <View style={styles.categoriesContainer}>
-                  {categories.map((category) => (
-                    <TouchableOpacity
-                      key={category}
-                      style={[
-                        styles.categoryButton,
-                        serviceData.categorie === category && styles.categoryButtonSelected
-                      ]}
-                      onPress={() => handleInputChange('categorie', category)}
-                      disabled={loading}
-                    >
-                      <Text style={[
-                        styles.categoryText,
-                        serviceData.categorie === category && styles.categoryTextSelected
-                      ]}>
-                        {category}
-                      </Text>
-                    </TouchableOpacity>
-                  ))}
-                </View>
-              </ScrollView>
-            </View>
-
-            {/* Description */}
-            <View style={styles.formGroup}>
-              <Text style={styles.label}>Description *</Text>
-              <TextInput
-                style={[styles.input, styles.textArea]}
-                placeholder="Décrivez votre service en détails..."
-                value={serviceData.description}
-                onChangeText={(text) => handleInputChange('description', text)}
-                multiline
-                numberOfLines={4}
-                textAlignVertical="top"
-                editable={!loading}
-              />
-            </View>
-
-            {/* Prix */}
-            <View style={styles.formGroup}>
-              <Text style={styles.label}>Prix (€) *</Text>
-              <View style={styles.priceContainer}>
+          <ScrollView 
+            style={styles.scrollView}
+            contentContainerStyle={styles.scrollContent}
+            showsVerticalScrollIndicator={false}
+          >
+            {/* Formulaire */}
+            <View style={styles.formContainer}>
+              {/* Titre */}
+              <View style={styles.formGroup}>
+                <Text style={styles.label}>Titre du service *</Text>
                 <TextInput
-                  style={[styles.input, styles.priceInput]}
-                  placeholder="50"
-                  value={serviceData.prix}
-                  onChangeText={(text) => handleInputChange('prix', text)}
-                  keyboardType="numeric"
+                  style={styles.input}
+                  placeholder="Ex: Nettoyage complet"
+                  value={serviceData.titre}
+                  onChangeText={(text) => handleInputChange('titre', text)}
                   editable={!loading}
                 />
-                <Text style={styles.currency}>€</Text>
+              </View>
+
+              {/* Catégorie */}
+              <View style={styles.formGroup}>
+                <Text style={styles.label}>Catégorie *</Text>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.categoriesScroll}>
+                  <View style={styles.categoriesContainer}>
+                    {categories.map((category) => (
+                      <TouchableOpacity
+                        key={category}
+                        style={[
+                          styles.categoryButton,
+                          serviceData.categorie === category && styles.categoryButtonSelected
+                        ]}
+                        onPress={() => handleInputChange('categorie', category)}
+                        disabled={loading}
+                      >
+                        <Text style={[
+                          styles.categoryText,
+                          serviceData.categorie === category && styles.categoryTextSelected
+                        ]}>
+                          {category}
+                        </Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                </ScrollView>
+              </View>
+
+              {/* Description */}
+              <View style={styles.formGroup}>
+                <Text style={styles.label}>Description *</Text>
+                <TextInput
+                  style={[styles.input, styles.textArea]}
+                  placeholder="Décrivez votre service en détails..."
+                  value={serviceData.description}
+                  onChangeText={(text) => handleInputChange('description', text)}
+                  multiline
+                  numberOfLines={4}
+                  textAlignVertical="top"
+                  editable={!loading}
+                />
+              </View>
+
+              {/* Prix */}
+              <View style={styles.formGroup}>
+                <Text style={styles.label}>Prix (DH) *</Text>
+                <View style={styles.priceContainer}>
+                  <TextInput
+                    style={[styles.input, styles.priceInput]}
+                    placeholder="50"
+                    value={serviceData.prix}
+                    onChangeText={(text) => handleInputChange('prix', text)}
+                    keyboardType="numeric"
+                    editable={!loading}
+                  />
+                  <Text style={styles.currency}>DH</Text>
+                </View>
+              </View>
+
+              {/* Bouton de soumission */}
+              <TouchableOpacity 
+                style={[styles.submitButton, loading && styles.submitButtonDisabled]}
+                onPress={handleSubmit}
+                disabled={loading}
+              >
+                <Text style={styles.submitButtonText}>
+                  {loading ? 'En cours...' : 'Publier le Service'}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </ScrollView>
+        ) : (
+          <View style={styles.successContainer}>
+            {/* Icône de succès */}
+            <View style={styles.successIconContainer}>
+              <View style={styles.successIconCircle}>
+                <Text style={styles.successIcon}>✓</Text>
               </View>
             </View>
 
-            
+            {/* Titre principal */}
+            <Text style={styles.successTitle}>Demande Enregistrée !</Text>
 
-            {/* Bouton de soumission */}
-            <TouchableOpacity 
-              style={[styles.submitButton, loading && styles.submitButtonDisabled]}
-              onPress={handleSubmit}
-              disabled={loading}
-            >
-              <Text style={styles.submitButtonText}>
-                {loading ? 'En cours...' : 'Publier le Service'}
+            {/* Message de confirmation */}
+            <View style={styles.messageContainer}>
+              <Text style={styles.successMessage}>
+                Votre service a été soumis avec succès et sera examiné par notre équipe.
               </Text>
-            </TouchableOpacity>
-          </View>
-          
-        </ScrollView>): 
-         <Text style={styles.headerTitle}>Mon Profil</Text>}
+              <Text style={styles.successSubMessage}>
+                Vous recevrez une notification une fois votre demande approuvée.
+              </Text>
+            </View>
 
+            {/* Détails de la demande */}
+            <View style={styles.detailsContainer}>
+              <View style={styles.detailRow}>
+                <Text style={styles.detailLabel}>Titre :</Text>
+                <Text style={styles.detailValue}>{serviceData.titre}</Text>
+              </View>
+              <View style={styles.detailRow}>
+                <Text style={styles.detailLabel}>Catégorie :</Text>
+                <Text style={styles.detailValue}>{serviceData.categorie}</Text>
+              </View>
+              <View style={styles.detailRow}>
+                <Text style={styles.detailLabel}>Prix :</Text>
+                <Text style={styles.detailValue}>{serviceData.prix} DH</Text>
+              </View>
+              <View style={styles.detailRow}>
+                <Text style={styles.detailLabel}>Statut :</Text>
+                <View style={styles.statusBadge}>
+                  <Text style={styles.statusText}>En attente de validation</Text>
+                </View>
+              </View>
+            </View>
+
+            {/* Bouton de retour */}
+            <TouchableOpacity 
+              style={styles.homeButton}
+              onPress={handleBackToHome}
+            >
+              <Text style={styles.homeButtonText}>Retour à l'accueil</Text>
+            </TouchableOpacity>
+
+            {/* Note informative */}
+            <View style={styles.infoBox}>
+              <Text style={styles.infoIcon}>ℹ️</Text>
+              <Text style={styles.infoText}>
+                Temps de traitement estimé : 24-48 heures
+              </Text>
+            </View>
+          </View>
+        )}
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
 };
-
-
 
 const styles = StyleSheet.create({
   container: {
@@ -362,23 +406,6 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#222831',
   },
-  imagesHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 10,
-  },
-  addImageText: {
-    color: '#FCDA05',
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  imageUrlContainer: {
-    marginBottom: 10,
-  },
-  imageInput: {
-    marginBottom: 0,
-  },
   submitButton: {
     backgroundColor: '#FCDA05',
     borderRadius: 15,
@@ -395,6 +422,142 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
     color: '#222831',
+  },
+  // Styles pour la section de succès
+  successContainer: {
+    flex: 1,
+    padding: 25,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  successIconContainer: {
+    marginBottom: 25,
+  },
+  successIconCircle: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    backgroundColor: '#4CAF50',
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 5,
+  },
+  successIcon: {
+    fontSize: 50,
+    color: 'white',
+    fontWeight: 'bold',
+  },
+  successTitle: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: '#222831',
+    marginBottom: 20,
+    textAlign: 'center',
+  },
+  messageContainer: {
+    backgroundColor: '#FFF',
+    borderRadius: 15,
+    padding: 20,
+    marginBottom: 30,
+    width: '100%',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 5,
+    elevation: 3,
+  },
+  successMessage: {
+    fontSize: 18,
+    color: '#222831',
+    marginBottom: 10,
+    textAlign: 'center',
+    lineHeight: 24,
+  },
+  successSubMessage: {
+    fontSize: 16,
+    color: '#666',
+    textAlign: 'center',
+    lineHeight: 22,
+  },
+  detailsContainer: {
+    backgroundColor: '#FFF',
+    borderRadius: 15,
+    padding: 20,
+    width: '100%',
+    marginBottom: 30,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 5,
+    elevation: 3,
+  },
+  detailRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F0F0F0',
+  },
+  detailLabel: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#666',
+  },
+  detailValue: {
+    fontSize: 16,
+    color: '#222831',
+    fontWeight: '500',
+  },
+  statusBadge: {
+    backgroundColor: '#FFF3CD',
+    paddingHorizontal: 15,
+    paddingVertical: 6,
+    borderRadius: 20,
+  },
+  statusText: {
+    color: '#856404',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  homeButton: {
+    backgroundColor: '#FCDA05',
+    borderRadius: 15,
+    paddingVertical: 16,
+    paddingHorizontal: 40,
+    alignItems: 'center',
+    marginBottom: 25,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.2,
+    shadowRadius: 6,
+    elevation: 4,
+  },
+  homeButtonText: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#222831',
+  },
+  infoBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#E8F4FD',
+    padding: 15,
+    borderRadius: 12,
+    width: '100%',
+  },
+  infoIcon: {
+    fontSize: 20,
+    marginRight: 10,
+  },
+  infoText: {
+    fontSize: 14,
+    color: '#0C5460',
+    flex: 1,
   },
 });
 
